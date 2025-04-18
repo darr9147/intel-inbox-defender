@@ -49,7 +49,7 @@ const Navbar = () => {
           {/* Logo and brand */}
           <Link to="/" className="flex items-center space-x-3">
             <Shield className="h-8 w-8 text-blue-500" />
-            <span className="text-xl font-bold text-white">IntelInbox</span>
+            <span className="text-xl font-bold text-white">Email Sentinel Vision</span>
           </Link>
 
           {/* Desktop navigation */}

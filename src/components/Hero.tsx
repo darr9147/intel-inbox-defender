@@ -10,7 +10,7 @@ const Hero = () => {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600 bg-clip-text text-transparent text-4xl font-bold tracking-tight sm:text-6xl">
-              AI-Powered Email Security Platform
+              Email Sentinel Vision Security
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-300">
               Protect your inbox from advanced threats with our AI-powered email security platform. Real-time detection of phishing, spam, and malware attacks.

@@ -1,5 +1,5 @@
 
-import { Shield, Mail, Lock, Globe, Bell, FileText, Brain, Database, Fingerprint } from "lucide-react";
+import { Shield, Mail, Lock, Globe, Bell, FileText, Brain, Database, Fingerprint, Eye, Zap } from "lucide-react";
 
 const features = [
   {
@@ -13,24 +13,24 @@ const features = [
     icon: Globe,
   },
   {
-    name: "Detailed Reports",
-    description: "Get comprehensive analysis reports with actionable insights and threat indicators.",
-    icon: FileText,
+    name: "Real-time Monitoring",
+    description: "Continuously scan and analyze emails as they arrive for immediate protection.",
+    icon: Eye,
   },
   {
     name: "Email Integration",
-    description: "Seamlessly connect your Gmail or Outlook inbox for continuous protection.",
+    description: "Seamlessly connect your Gmail, Outlook, or Microsoft 365 inbox for continuous protection.",
     icon: Mail,
   },
   {
-    name: "Real-time Alerts",
-    description: "Receive instant notifications when suspicious activities are detected in your inbox.",
+    name: "Instant Alerts",
+    description: "Receive immediate notifications when suspicious activities are detected in your inbox.",
     icon: Bell,
   },
   {
-    name: "Email Fingerprinting",
-    description: "Advanced fingerprinting technology to identify and block known malicious patterns.",
-    icon: Fingerprint,
+    name: "Advanced Analytics",
+    description: "Comprehensive security dashboards with actionable insights and threat analytics.",
+    icon: Zap,
   },
 ];
 
