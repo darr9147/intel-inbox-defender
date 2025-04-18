@@ -1,123 +1,133 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Mock login function (replace with actual implementation when connecting to backend)
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login for demo purposes
-      if (email && password) {
-        setUser({
-          id: '1',
-          email,
-          name: email.split('@')[0]
-        });
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        
-        return true;
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid credentials",
-          variant: "destructive",
-        });
-        return false;
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setLoading(false);
       }
-    } catch (error) {
-      toast({
-        title: "Login error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    );
 
-  // Mock signup function
-  const signup = async (email: string, password: string, name: string) => {
-    setLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (email && password && name) {
-        setUser({
-          id: '1',
-          email,
-          name
-        });
-        
-        toast({
-          title: "Account created",
-          description: "Your account has been successfully created",
-        });
-        
-        return true;
-      } else {
-        toast({
-          title: "Signup failed",
-          description: "Please fill in all fields",
-          variant: "destructive",
-        });
-        return false;
-      }
-    } catch (error) {
-      toast({
-        title: "Signup error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
       setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
     });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
+      navigate('/dashboard');
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, name: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sign up successful",
+        description: "Welcome to Email Sentinel Vision!",
+      });
+      
+      navigate('/dashboard');
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Sign up failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      navigate('/login');
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       isAuthenticated: !!user,
       loading,
       login,

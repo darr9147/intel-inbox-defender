@@ -50,7 +50,7 @@ const Signup = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500"
-                  placeholder="John Doe"
+                  placeholder="Raj Sekhar"
                 />
               </div>
             </div>
