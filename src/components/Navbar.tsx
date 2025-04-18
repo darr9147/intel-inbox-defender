@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -9,9 +10,8 @@ import {
 } from "@/components/ui/sheet";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const navItems = [
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Features', href: '#features' },
     { name: 'Reports', href: '#reports' },
     { name: 'Threat Map', href: '#threat-map' },
@@ -21,13 +21,23 @@ const Navbar = () => {
   const NavLinks = () => (
     <>
       {navItems.map((item) => (
-        <a
-          key={item.name}
-          href={item.href}
-          className="text-gray-300 hover:text-white transition-colors"
-        >
-          {item.name}
-        </a>
+        item.href.startsWith('#') ? (
+          <a
+            key={item.name}
+            href={item.href}
+            className="text-gray-300 hover:text-white transition-colors"
+          >
+            {item.name}
+          </a>
+        ) : (
+          <Link
+            key={item.name}
+            to={item.href}
+            className="text-gray-300 hover:text-white transition-colors"
+          >
+            {item.name}
+          </Link>
+        )
       ))}
     </>
   );
@@ -37,10 +47,10 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and brand */}
-          <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3">
             <Shield className="h-8 w-8 text-blue-500" />
             <span className="text-xl font-bold text-white">IntelInbox</span>
-          </div>
+          </Link>
 
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center space-x-8">

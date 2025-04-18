@@ -1,15 +1,15 @@
 
-import { Shield, Mail, Lock, Globe, Bell, FileText } from "lucide-react";
+import { Shield, Mail, Lock, Globe, Bell, FileText, Brain, Database, Fingerprint } from "lucide-react";
 
 const features = [
   {
-    name: "Real-time Threat Detection",
-    description: "AI-powered scanning detects phishing attempts, malware, and suspicious content in real-time.",
-    icon: Shield,
+    name: "AI-Powered Threat Detection",
+    description: "Advanced machine learning models detect phishing attempts, malware, and suspicious content in real-time.",
+    icon: Brain,
   },
   {
     name: "Global Threat Map",
-    description: "Visualize and track the origin of threats with our interactive global threat map.",
+    description: "Visualize and track the origin of threats with our interactive global threat mapping system.",
     icon: Globe,
   },
   {
@@ -23,14 +23,14 @@ const features = [
     icon: Mail,
   },
   {
-    name: "Instant Alerts",
-    description: "Receive real-time notifications when suspicious activities are detected.",
+    name: "Real-time Alerts",
+    description: "Receive instant notifications when suspicious activities are detected in your inbox.",
     icon: Bell,
   },
   {
-    name: "Advanced Security",
-    description: "Enterprise-grade security with end-to-end encryption and compliance features.",
-    icon: Lock,
+    name: "Email Fingerprinting",
+    description: "Advanced fingerprinting technology to identify and block known malicious patterns.",
+    icon: Fingerprint,
   },
 ];
 
@@ -40,10 +40,10 @@ const Features = () => {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Comprehensive Email Security
+            Advanced Email Security Features
           </h2>
           <p className="mt-6 text-lg leading-8 text-gray-300">
-            Protect your organization with our advanced threat detection and prevention features.
+            Protect your organization with our comprehensive suite of AI-powered security features.
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-7xl sm:mt-20 lg:mt-24">
