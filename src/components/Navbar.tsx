@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, Shield, User, ChevronDown } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +20,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -45,6 +46,11 @@ const Navbar = () => {
     </>
   );
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
     <nav className="fixed top-0 w-full bg-gray-900/95 backdrop-blur-sm z-50 border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +72,7 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="text-gray-300 hover:text-white flex items-center">
-                    <span className="mr-2">{user?.name}</span>
+                    <span className="mr-2">{user?.user_metadata?.name || "User"}</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -80,7 +86,7 @@ const Navbar = () => {
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem 
                     className="cursor-pointer hover:bg-gray-700 hover:text-white"
-                    onClick={logout}
+                    onClick={handleLogout}
                   >
                     Logout
                   </DropdownMenuItem>
@@ -123,7 +129,7 @@ const Navbar = () => {
                         <Button 
                           variant="ghost" 
                           className="w-full text-left text-gray-300 hover:text-white"
-                          onClick={logout}
+                          onClick={handleLogout}
                         >
                           Logout
                         </Button>

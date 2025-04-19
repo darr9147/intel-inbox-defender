@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ const UserProfile = () => {
   const { toast } = useToast();
   
   // Form states
-  const [name, setName] = useState(user?.name || "");
+  const [name, setName] = useState(user?.user_metadata?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

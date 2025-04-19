@@ -3,10 +3,19 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
+
+// Define metadata interface to better handle custom user data
+interface UserMetadata {
+  name?: string;
+}
+
+// Extended User type that includes our custom metadata
+interface ExtendedUser extends User {
+  user_metadata: UserMetadata;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -18,18 +27,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        setUser(currentSession?.user as ExtendedUser ?? null);
         setLoading(false);
       }
     );
@@ -37,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      setUser(currentSession?.user as ExtendedUser ?? null);
       setLoading(false);
     });
 
@@ -59,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome back!",
       });
       
-      navigate('/dashboard');
       return true;
     } catch (error: any) {
       toast({
@@ -93,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome to Email Sentinel Vision!",
       });
       
-      navigate('/dashboard');
       return true;
     } catch (error: any) {
       toast({
@@ -114,7 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logged out",
         description: "You have been successfully logged out",
       });
-      navigate('/login');
     } catch (error: any) {
       toast({
         title: "Logout failed",
