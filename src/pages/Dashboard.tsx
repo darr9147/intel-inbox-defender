@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, Mail, AlertTriangle, Activity, FileText, Lock, Upload, BarChart, Globe, Calendar, DollarSign, Cpu } from "lucide-react";
+import { Shield, Mail, AlertTriangle, Activity, FileText, Lock, Upload, BarChart, Globe, Calendar, DollarSign, Cpu, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { 
@@ -21,7 +20,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import ConnectEmailModal from "@/components/ConnectEmailModal";
-import { fetchEmailAccounts, fetchEmailThreats, getThreatStatistics } from "@/services/emailService";
+import { fetchEmailAccounts, fetchEmailThreats, getThreatStatistics, disconnectEmailAccount } from "@/services/emailService";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
@@ -116,6 +115,30 @@ const Dashboard = () => {
       title: "File Upload",
       description: "File upload feature will be implemented in a future update",
     });
+  };
+
+  const handleDisconnectEmail = async (accountId: string) => {
+    try {
+      const success = await disconnectEmailAccount(accountId);
+      if (success) {
+        // Reload email accounts after disconnection
+        const accounts = await fetchEmailAccounts();
+        setEmailAccounts(accounts);
+        
+        toast({
+          title: "Email Disconnected",
+          description: "Email account has been successfully disconnected",
+        });
+      } else {
+        throw new Error("Failed to disconnect email");
+      }
+    } catch (error) {
+      toast({
+        title: "Disconnection Failed",
+        description: "Could not disconnect email account",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -316,6 +339,28 @@ const Dashboard = () => {
                 <div className="mt-8">
                   <h3 className="text-lg font-medium text-white mb-4">Connected Accounts</h3>
                   
+                  {emailAccounts.map((account, index) => (
+                    <div 
+                      key={index} 
+                      className="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Mail className="h-5 w-5 text-blue-400" />
+                        <div>
+                          <p className="text-white font-medium">{account.email}</p>
+                          <p className="text-gray-400 text-sm">Connected via {account.provider}</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDisconnectEmail(account.id)}
+                        className="text-gray-400 hover:text-white hover:bg-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                   {emailAccounts.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {emailAccounts.map((account, index) => (

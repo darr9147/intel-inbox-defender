@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Loader2 } from "lucide-react";
-import { connectEmailAccount } from "@/services/emailService";
+import { Mail, Loader2, X } from "lucide-react";
+import { connectEmailAccount, disconnectEmailAccount } from "@/services/emailService";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ConnectEmailModalProps {
