@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      email_accounts: {
+        Row: {
+          connected_at: string | null
+          email: string
+          id: string
+          provider: string
+          user_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          email: string
+          id?: string
+          provider: string
+          user_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          email?: string
+          id?: string
+          provider?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_threats: {
+        Row: {
+          country: string | null
+          date: string | null
+          dkim: string | null
+          dmarc: string | null
+          id: number
+          is_safe: boolean | null
+          risk_reasons: Json | null
+          risk_score: number | null
+          sender: string
+          sender_ip: string | null
+          severity: string | null
+          spf: string | null
+          status: string | null
+          subject: string
+          threat: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          date?: string | null
+          dkim?: string | null
+          dmarc?: string | null
+          id?: number
+          is_safe?: boolean | null
+          risk_reasons?: Json | null
+          risk_score?: number | null
+          sender: string
+          sender_ip?: string | null
+          severity?: string | null
+          spf?: string | null
+          status?: string | null
+          subject: string
+          threat?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          date?: string | null
+          dkim?: string | null
+          dmarc?: string | null
+          id?: number
+          is_safe?: boolean | null
+          risk_reasons?: Json | null
+          risk_score?: number | null
+          sender?: string
+          sender_ip?: string | null
+          severity?: string | null
+          spf?: string | null
+          status?: string | null
+          subject?: string
+          threat?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
