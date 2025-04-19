@@ -35,6 +35,146 @@ const mockEmailAccounts: EmailAccount[] = [
   }
 ];
 
+// Mock email threats data for initial UI rendering
+let mockEmailThreats: EmailThreat[] = [
+  {
+    id: 1,
+    date: '2025-04-15T10:30:00',
+    subject: 'Your Account Security Alert',
+    sender: 'security@fake-bank.com',
+    senderIP: '192.168.1.1',
+    country: 'Russia',
+    threat: 'Phishing',
+    severity: 'High',
+    status: 'Blocked',
+    spf: 'fail',
+    dkim: 'fail',
+    dmarc: 'fail',
+    risk_score: 85,
+    risk_reasons: ['Suspicious sender domain', 'Failed authentication'],
+    is_safe: false
+  },
+  {
+    id: 2,
+    date: '2025-04-15T09:15:00',
+    subject: 'Invoice #INV-4821 - Payment Required',
+    sender: 'billing@supplier-scam.net',
+    senderIP: '10.0.0.1',
+    country: 'Nigeria',
+    threat: 'Malware',
+    severity: 'Critical',
+    status: 'Quarantined',
+    spf: 'pass',
+    dkim: 'fail',
+    dmarc: 'none',
+    risk_score: 92,
+    risk_reasons: ['Known malware pattern', 'Suspicious attachments'],
+    is_safe: false
+  },
+  {
+    id: 3,
+    date: '2025-04-14T16:45:00',
+    subject: 'Your Package Delivery Notification',
+    sender: 'delivery@shipping-notice.co',
+    senderIP: '172.16.0.1',
+    country: 'China',
+    threat: 'Spam',
+    severity: 'Medium',
+    status: 'Quarantined',
+    spf: 'neutral',
+    dkim: 'pass',
+    dmarc: 'fail',
+    risk_score: 65,
+    risk_reasons: ['Mass mailing pattern', 'Suspicious links'],
+    is_safe: false
+  },
+  {
+    id: 4,
+    date: '2025-04-14T11:20:00',
+    subject: 'Urgent: Wire Transfer Required',
+    sender: 'ceo@company-spoofed.org',
+    senderIP: '169.254.0.1',
+    country: 'Ukraine',
+    threat: 'Business Email Compromise',
+    severity: 'Critical',
+    status: 'Blocked',
+    spf: 'fail',
+    dkim: 'fail',
+    dmarc: 'fail',
+    risk_score: 95,
+    risk_reasons: ['Executive impersonation', 'Urgent action request'],
+    is_safe: false
+  },
+  {
+    id: 5,
+    date: '2025-04-13T14:30:00',
+    subject: 'Win a Free iPhone 15 - Claim Now',
+    sender: 'prize@sweepstakes-winner.info',
+    senderIP: '203.0.113.1',
+    country: 'Romania',
+    threat: 'Scam',
+    severity: 'Medium',
+    status: 'Quarantined',
+    spf: 'pass',
+    dkim: 'fail',
+    dmarc: 'none',
+    risk_score: 70,
+    risk_reasons: ['Prize scam indicators', 'Suspicious domain age'],
+    is_safe: false
+  },
+  {
+    id: 6,
+    date: '2025-04-12T09:30:00',
+    subject: 'Monthly Newsletter - April 2025',
+    sender: 'news@legitimate-company.com',
+    senderIP: '192.0.2.1',
+    country: 'United States',
+    threat: 'None',
+    severity: 'Low',
+    status: 'Allowed',
+    spf: 'pass',
+    dkim: 'pass',
+    dmarc: 'pass',
+    risk_score: 15,
+    risk_reasons: [],
+    is_safe: true
+  },
+  {
+    id: 7,
+    date: '2025-04-11T15:45:00',
+    subject: 'Your Account Statement - April 2025',
+    sender: 'statements@realbank.com',
+    senderIP: '198.51.100.1',
+    country: 'United States',
+    threat: 'None',
+    severity: 'Low',
+    status: 'Allowed',
+    spf: 'pass',
+    dkim: 'pass',
+    dmarc: 'pass',
+    risk_score: 12,
+    risk_reasons: [],
+    is_safe: true
+  },
+  {
+    id: 8,
+    date: '2025-04-10T11:20:00',
+    subject: 'Team Meeting - Tomorrow at 10 AM',
+    sender: 'colleague@company.com',
+    senderIP: '203.0.113.1',
+    country: 'United States',
+    threat: 'None',
+    severity: 'Low',
+    status: 'Allowed',
+    spf: 'pass',
+    dkim: 'pass',
+    dmarc: 'pass',
+    risk_score: 5,
+    risk_reasons: [],
+    is_safe: true
+  }
+];
+
 export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
   // Return mock data instead of querying Supabase
   return [...mockEmailAccounts];
@@ -44,18 +184,60 @@ export const connectEmailAccount = async (
   provider: string,
   email: string
 ): Promise<EmailAccount | null> => {
-  // Create a new mock account
-  const newAccount: EmailAccount = {
-    id: String(mockEmailAccounts.length + 1),
-    provider,
-    email,
-    connected_at: new Date().toISOString()
-  };
-  
-  // Add to mock data
-  mockEmailAccounts.push(newAccount);
-  
-  return newAccount;
+  try {
+    // Create a new mock account
+    const newAccount: EmailAccount = {
+      id: String(mockEmailAccounts.length + 1),
+      provider,
+      email,
+      connected_at: new Date().toISOString()
+    };
+    
+    // Add to mock data
+    mockEmailAccounts.push(newAccount);
+    
+    // Analyze the email using IPQualityScore API
+    await analyzeNewEmail(email);
+    
+    return newAccount;
+  } catch (error) {
+    console.error('Error connecting email account:', error);
+    return null;
+  }
+};
+
+export const analyzeNewEmail = async (email: string): Promise<void> => {
+  try {
+    const response = await fetch(`${window.location.origin}/api/analyze-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        sender: email,
+        subject: "Email account connection",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error analyzing email: ${response.statusText}`);
+    }
+
+    const threatData = await response.json();
+    
+    // Add analyzed email to our threat database
+    const newThreat: EmailThreat = {
+      ...threatData,
+      id: mockEmailThreats.length + 1,
+    };
+    
+    mockEmailThreats = [newThreat, ...mockEmailThreats];
+    console.log("Email analyzed and added to threats:", newThreat);
+    
+  } catch (error) {
+    console.error("Error analyzing email:", error);
+  }
 };
 
 export const fetchEmailThreats = async (
@@ -67,154 +249,8 @@ export const fetchEmailThreats = async (
   }
 ): Promise<EmailThreat[]> => {
   try {
-    // In a real app, this would fetch from the database
-    // For this demo, we'll return simulated data
-    
-    // This simulates fetching from a database table
-    // If you have real data in Supabase, you'd query that instead
-    
-    // Simulated data for demonstration
-    const threats: EmailThreat[] = [
-      {
-        id: 1,
-        date: '2025-04-15T10:30:00',
-        subject: 'Your Account Security Alert',
-        sender: 'security@fake-bank.com',
-        senderIP: '192.168.1.1',
-        country: 'Russia',
-        threat: 'Phishing',
-        severity: 'High',
-        status: 'Blocked',
-        spf: 'fail',
-        dkim: 'fail',
-        dmarc: 'fail',
-        risk_score: 85,
-        risk_reasons: ['Suspicious sender domain', 'Failed authentication'],
-        is_safe: false
-      },
-      {
-        id: 2,
-        date: '2025-04-15T09:15:00',
-        subject: 'Invoice #INV-4821 - Payment Required',
-        sender: 'billing@supplier-scam.net',
-        senderIP: '10.0.0.1',
-        country: 'Nigeria',
-        threat: 'Malware',
-        severity: 'Critical',
-        status: 'Quarantined',
-        spf: 'pass',
-        dkim: 'fail',
-        dmarc: 'none',
-        risk_score: 92,
-        risk_reasons: ['Known malware pattern', 'Suspicious attachments'],
-        is_safe: false
-      },
-      {
-        id: 3,
-        date: '2025-04-14T16:45:00',
-        subject: 'Your Package Delivery Notification',
-        sender: 'delivery@shipping-notice.co',
-        senderIP: '172.16.0.1',
-        country: 'China',
-        threat: 'Spam',
-        severity: 'Medium',
-        status: 'Quarantined',
-        spf: 'neutral',
-        dkim: 'pass',
-        dmarc: 'fail',
-        risk_score: 65,
-        risk_reasons: ['Mass mailing pattern', 'Suspicious links'],
-        is_safe: false
-      },
-      {
-        id: 4,
-        date: '2025-04-14T11:20:00',
-        subject: 'Urgent: Wire Transfer Required',
-        sender: 'ceo@company-spoofed.org',
-        senderIP: '169.254.0.1',
-        country: 'Ukraine',
-        threat: 'Business Email Compromise',
-        severity: 'Critical',
-        status: 'Blocked',
-        spf: 'fail',
-        dkim: 'fail',
-        dmarc: 'fail',
-        risk_score: 95,
-        risk_reasons: ['Executive impersonation', 'Urgent action request'],
-        is_safe: false
-      },
-      {
-        id: 5,
-        date: '2025-04-13T14:30:00',
-        subject: 'Win a Free iPhone 15 - Claim Now',
-        sender: 'prize@sweepstakes-winner.info',
-        senderIP: '203.0.113.1',
-        country: 'Romania',
-        threat: 'Scam',
-        severity: 'Medium',
-        status: 'Quarantined',
-        spf: 'pass',
-        dkim: 'fail',
-        dmarc: 'none',
-        risk_score: 70,
-        risk_reasons: ['Prize scam indicators', 'Suspicious domain age'],
-        is_safe: false
-      },
-      {
-        id: 6,
-        date: '2025-04-12T09:30:00',
-        subject: 'Monthly Newsletter - April 2025',
-        sender: 'news@legitimate-company.com',
-        senderIP: '192.0.2.1',
-        country: 'United States',
-        threat: 'None',
-        severity: 'Low',
-        status: 'Allowed',
-        spf: 'pass',
-        dkim: 'pass',
-        dmarc: 'pass',
-        risk_score: 15,
-        risk_reasons: [],
-        is_safe: true
-      },
-      {
-        id: 7,
-        date: '2025-04-11T15:45:00',
-        subject: 'Your Account Statement - April 2025',
-        sender: 'statements@realbank.com',
-        senderIP: '198.51.100.1',
-        country: 'United States',
-        threat: 'None',
-        severity: 'Low',
-        status: 'Allowed',
-        spf: 'pass',
-        dkim: 'pass',
-        dmarc: 'pass',
-        risk_score: 12,
-        risk_reasons: [],
-        is_safe: true
-      },
-      {
-        id: 8,
-        date: '2025-04-10T11:20:00',
-        subject: 'Team Meeting - Tomorrow at 10 AM',
-        sender: 'colleague@company.com',
-        senderIP: '203.0.113.1',
-        country: 'United States',
-        threat: 'None',
-        severity: 'Low',
-        status: 'Allowed',
-        spf: 'pass',
-        dkim: 'pass',
-        dmarc: 'pass',
-        risk_score: 5,
-        risk_reasons: [],
-        is_safe: true
-      }
-    ];
-    
     // Apply filters
-    let filteredThreats = [...threats];
+    let filteredThreats = [...mockEmailThreats];
     
     if (filters) {
       const { threatType, severity, dateRange, searchQuery } = filters;
