@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailThreat {
@@ -26,41 +25,37 @@ interface EmailAccount {
   connected_at: string;
 }
 
-export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('email_accounts')
-      .select('*');
-    
-    if (error) throw error;
-    
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching email accounts:', error);
-    return [];
+// Mock email accounts data
+const mockEmailAccounts: EmailAccount[] = [
+  {
+    id: "1",
+    provider: "gmail",
+    email: "user@gmail.com",
+    connected_at: new Date().toISOString()
   }
+];
+
+export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
+  // Return mock data instead of querying Supabase
+  return [...mockEmailAccounts];
 };
 
 export const connectEmailAccount = async (
   provider: string,
   email: string
 ): Promise<EmailAccount | null> => {
-  try {
-    // In a real app, this would integrate with OAuth flow
-    // For this demo, we'll simulate adding an account directly
-    const { data, error } = await supabase
-      .from('email_accounts')
-      .insert([{ provider, email, connected_at: new Date().toISOString() }])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    return data;
-  } catch (error) {
-    console.error('Error connecting email account:', error);
-    return null;
-  }
+  // Create a new mock account
+  const newAccount: EmailAccount = {
+    id: String(mockEmailAccounts.length + 1),
+    provider,
+    email,
+    connected_at: new Date().toISOString()
+  };
+  
+  // Add to mock data
+  mockEmailAccounts.push(newAccount);
+  
+  return newAccount;
 };
 
 export const fetchEmailThreats = async (
