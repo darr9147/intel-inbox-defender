@@ -50,9 +50,10 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }: ConnectEmailModalProp
         throw new Error("Failed to connect email");
       }
     } catch (error) {
+      console.error('Connection error:', error);
       toast({
         title: "Connection Failed",
-        description: "Could not connect to email account",
+        description: error instanceof Error ? error.message : "Could not connect to email account",
         variant: "destructive",
       });
     } finally {
@@ -82,6 +83,7 @@ const ConnectEmailModal = ({ isOpen, onClose, onSuccess }: ConnectEmailModalProp
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
               className="col-span-3 bg-gray-700 border-gray-600 text-white"
+              type="email"
             />
           </div>
 

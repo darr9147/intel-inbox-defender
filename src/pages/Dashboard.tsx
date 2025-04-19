@@ -42,21 +42,16 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        // Load email accounts
         const accounts = await fetchEmailAccounts();
         setEmailAccounts(accounts);
         
-        // Load email threats
         const threats = await fetchEmailThreats();
         setEmailThreats(threats);
         
-        // Calculate statistics
         const stats = await getThreatStatistics();
         
-        // Prepare weekly data
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const weeklyData = days.map(day => {
-          // Generate random counts for the demo
           const randomCount = Math.floor(Math.random() * 20);
           return { day, count: randomCount };
         });
@@ -87,15 +82,12 @@ const Dashboard = () => {
   };
 
   const handleConnectSuccess = async () => {
-    // Reload email accounts after successful connection
     const accounts = await fetchEmailAccounts();
     setEmailAccounts(accounts);
     
-    // Reload threats to include any newly analyzed emails
     const threats = await fetchEmailThreats();
     setEmailThreats(threats);
     
-    // Update stats
     setThreatStats(prev => ({
       ...prev,
       emailsScanned: threats.length,
@@ -110,7 +102,6 @@ const Dashboard = () => {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Handle file upload logic
     toast({
       title: "File Upload",
       description: "File upload feature will be implemented in a future update",
@@ -121,7 +112,6 @@ const Dashboard = () => {
     try {
       const success = await disconnectEmailAccount(accountId);
       if (success) {
-        // Reload email accounts after disconnection
         const accounts = await fetchEmailAccounts();
         setEmailAccounts(accounts);
         
@@ -158,12 +148,10 @@ const Dashboard = () => {
           <TabsList className="w-full bg-gray-800 border border-gray-700 mb-6">
             <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-blue-600 text-white">Overview</TabsTrigger>
             <TabsTrigger value="connect" className="flex-1 data-[state=active]:bg-blue-600 text-white">Connect Email</TabsTrigger>
-            <TabsTrigger value="upload" className="flex-1 data-[state=active]:bg-blue-600 text-white">Upload Files</TabsTrigger>
             <TabsTrigger value="watchlist" className="flex-1 data-[state=active]:bg-blue-600 text-white">Watchlist</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card className="bg-gray-800 border border-gray-700">
                 <CardHeader className="pb-2">
@@ -205,7 +193,6 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Weekly Trend Chart */}
             <Card className="bg-gray-800 border border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center space-x-3">
@@ -241,7 +228,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
             <Card className="bg-gray-800 border border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center space-x-3">
@@ -338,87 +324,37 @@ const Dashboard = () => {
 
                 <div className="mt-8">
                   <h3 className="text-lg font-medium text-white mb-4">Connected Accounts</h3>
-                  
-                  {emailAccounts.map((account, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Mail className="h-5 w-5 text-blue-400" />
-                        <div>
-                          <p className="text-white font-medium">{account.email}</p>
-                          <p className="text-gray-400 text-sm">Connected via {account.provider}</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDisconnectEmail(account.id)}
-                        className="text-gray-400 hover:text-white hover:bg-gray-600"
+                  <div className="space-y-4">
+                    {emailAccounts.map((account, index) => (
+                      <div 
+                        key={index} 
+                        className="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between"
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  {emailAccounts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {emailAccounts.map((account, index) => (
-                        <div 
-                          key={index} 
-                          className="bg-gray-700/50 rounded-lg p-4 flex items-center space-x-3"
-                        >
+                        <div className="flex items-center space-x-3">
                           <Mail className="h-5 w-5 text-blue-400" />
                           <div>
                             <p className="text-white font-medium">{account.email}</p>
                             <p className="text-gray-400 text-sm">Connected via {account.provider}</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-700/50 rounded-lg p-6 text-center">
-                      <Lock className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                      <p className="text-gray-400">No email accounts connected yet</p>
-                      <p className="text-gray-500 text-sm mt-1">Connect an account to start monitoring</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="upload" className="space-y-6">
-            <Card className="bg-gray-800 border border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Upload Email Files</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Upload .eml or .msg files for analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-700/50 border-2 border-dashed border-gray-600 rounded-lg p-10 text-center">
-                  <Upload className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                  <p className="text-white text-lg mb-2">Drag and drop email files</p>
-                  <p className="text-gray-400 mb-4">or</p>
-                  
-                  <label htmlFor="file-upload">
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      Select files
-                    </Button>
-                    <Input 
-                      id="file-upload" 
-                      type="file" 
-                      accept=".eml,.msg" 
-                      multiple
-                      onChange={handleFileUpload}
-                      className="hidden" 
-                    />
-                  </label>
-                  
-                  <p className="text-gray-500 text-sm mt-4">
-                    Supports .eml and .msg file formats
-                  </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDisconnectEmail(account.id)}
+                          className="text-gray-400 hover:text-white hover:bg-gray-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {emailAccounts.length === 0 && (
+                      <div className="bg-gray-700/50 rounded-lg p-6 text-center">
+                        <Lock className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                        <p className="text-gray-400">No email accounts connected yet</p>
+                        <p className="text-gray-500 text-sm mt-1">Connect an account to start monitoring</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -478,7 +414,6 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Quick Access Tiles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           <a href="/reports">
             <Card className="bg-gray-800 border border-gray-700 hover:border-blue-500 cursor-pointer transition-colors">
@@ -530,7 +465,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Connect Email Modal */}
       <ConnectEmailModal 
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
