@@ -1,12 +1,16 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const IPQUALITYSCORE_API_KEY = "icF9wrJO400DxKktcuGwDdaAWg8Sm6Vq";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface EmailAnalysisRequest {
+  email: string;
+  sender: string;
+  subject: string;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,97 +19,104 @@ serve(async (req) => {
   }
 
   try {
-    const { email, sender, subject } = await req.json();
-
-    // Validate input
-    if (!email) {
-      return new Response(
-        JSON.stringify({ error: "Email is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    const { email, sender, subject } = await req.json() as EmailAnalysisRequest;
+    const ipQualityScoreApiKey = Deno.env.get('IPQUALITYSCORE_API_KEY') || 'icF9wrJO400DxKktcuGwDdaAWg8Sm6Vq';
+    
     // Call IPQualityScore API to analyze the email
-    const apiUrl = `https://www.ipqualityscore.com/api/json/email/${IPQUALITYSCORE_API_KEY}/${encodeURIComponent(email)}`;
+    const apiUrl = `https://www.ipqualityscore.com/api/json/email/${ipQualityScoreApiKey}/${encodeURIComponent(email)}`;
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const ipqsData = await response.json();
+    console.log(`Analyzing email ${email} from sender ${sender} with subject "${subject}"`);
     
-    console.log("IPQualityScore response:", JSON.stringify(ipqsData));
-
-    // Map IPQualityScore data to our threat model
-    const emailThreat = {
-      sender: sender || email,
-      subject: subject || "Email analysis",
-      date: new Date().toISOString(),
-      senderIP: ipqsData.recently_created ? "Unknown" : "Verified",
-      country: ipqsData.country_code || "Unknown",
-      threat: determineThreatType(ipqsData),
-      severity: determineSeverity(ipqsData),
-      status: ipqsData.valid ? "Allowed" : "Blocked",
-      spf: ipqsData.smtp_score > 0.7 ? "pass" : "fail",
-      dkim: ipqsData.dns_valid ? "pass" : "fail",
-      dmarc: ipqsData.disposable ? "fail" : "pass",
-      risk_score: Math.round(ipqsData.fraud_score),
-      risk_reasons: extractRiskReasons(ipqsData),
-      is_safe: ipqsData.fraud_score < 50 && ipqsData.valid,
-    };
-
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`IPQualityScore API error: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("IPQualityScore analysis result:", data);
+    
+    // Store the result in Supabase (you can uncomment this when the table is ready)
+    const { supabaseClient } = await import 'https://esm.sh/@supabase/supabase-js@2';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://fnkjxnltxopuljxyoxzx.supabase.co';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (supabaseUrl && supabaseKey) {
+      const supabase = supabaseClient(supabaseUrl, supabaseKey);
+      
+      // Try to insert the analysis result into the email_threats table
+      try {
+        const { error } = await supabase
+          .from('email_threats')
+          .insert([{
+            subject: subject,
+            sender: sender,
+            sender_ip: data.success ? data.fraud_score : "Unknown",
+            country: data.success ? data.country : "Unknown",
+            threat: data.success && data.fraud_score > 75 ? "Potential Fraud" : "None",
+            severity: data.success ? 
+              (data.fraud_score > 80 ? "High" : 
+               data.fraud_score > 50 ? "Medium" : "Low") : "Unknown",
+            status: data.success && data.fraud_score > 75 ? "Quarantined" : "Allowed",
+            spf: data.success ? (data.spam_trap_score > 0.5 ? "fail" : "pass") : "unknown",
+            dkim: data.success ? (data.recent_abuse ? "fail" : "pass") : "unknown",
+            dmarc: data.success ? (data.disposable ? "fail" : "pass") : "unknown",
+            risk_score: data.success ? data.fraud_score : 0,
+            risk_reasons: data.success ? [
+              data.disposable ? "Disposable email" : null,
+              data.honeypot ? "Honeypot detected" : null,
+              data.recent_abuse ? "Recent abuse detected" : null,
+              data.spam_trap_score > 0.5 ? "Possible spam trap" : null
+            ].filter(Boolean) : [],
+            is_safe: data.success ? data.fraud_score < 50 : true,
+            date: new Date().toISOString(),
+            user_id: req.headers.get('Authorization')?.split(' ')[1] || 'anonymous'
+          }]);
+          
+        if (error) {
+          console.error("Error inserting threat data:", error);
+        }
+      } catch (dbError) {
+        console.error("Database operation failed:", dbError);
+      }
+    } else {
+      console.log("Supabase credentials not available, skipping database storage");
+    }
+    
     return new Response(
-      JSON.stringify(emailThreat),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: true,
+        message: "Email analyzed successfully",
+        threatDetails: {
+          riskScore: data.success ? data.fraud_score : 0,
+          isSafe: data.success ? data.fraud_score < 50 : true,
+          severity: data.success ? 
+            (data.fraud_score > 80 ? "High" : 
+             data.fraud_score > 50 ? "Medium" : "Low") : "Unknown",
+        }
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
+      }
     );
   } catch (error) {
-    console.error("Error in analyze-email function:", error);
+    console.error("Error analyzing email:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: false,
+        message: "Failed to analyze email",
+        error: error.message
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
+      }
     );
   }
 });
-
-function determineThreatType(ipqsData: any): string {
-  if (ipqsData.disposable) return "Spam";
-  if (ipqsData.honeypot) return "Phishing";
-  if (ipqsData.spam_trap_score > 0.7) return "Spam";
-  if (ipqsData.overall_score < 0.3) return "Phishing";
-  if (ipqsData.overall_score < 0.7) return "Suspicious";
-  return "None";
-}
-
-function determineSeverity(ipqsData: any): string {
-  const fraudScore = ipqsData.fraud_score;
-  if (fraudScore > 85) return "Critical";
-  if (fraudScore > 70) return "High";
-  if (fraudScore > 40) return "Medium";
-  return "Low";
-}
-
-function extractRiskReasons(ipqsData: any): string[] {
-  const reasons = [];
-  
-  if (ipqsData.disposable) reasons.push("Disposable email address");
-  if (ipqsData.honeypot) reasons.push("Email used in honeypot");
-  if (ipqsData.smtp_score < 0.5) reasons.push("Poor SMTP configuration");
-  if (ipqsData.overall_score < 0.5) reasons.push("Low overall email quality");
-  if (ipqsData.recent_abuse) reasons.push("Recent abuse detected");
-  if (ipqsData.spam_trap_score > 0.5) reasons.push("Email matches spam patterns");
-  if (ipqsData.fraudulent) reasons.push("Fraudulent activity detected");
-  if (ipqsData.suspect) reasons.push("Suspicious characteristics");
-  if (ipqsData.recently_created && ipqsData.days_since_domain_creation < 30) {
-    reasons.push("Domain recently created");
-  }
-  
-  // If no specific reasons found but score is high
-  if (reasons.length === 0 && ipqsData.fraud_score > 70) {
-    reasons.push("Multiple risk factors detected");
-  }
-  
-  return reasons;
-}
