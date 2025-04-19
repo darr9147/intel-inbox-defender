@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,13 +36,12 @@ serve(async (req) => {
     const data = await response.json();
     console.log("IPQualityScore analysis result:", data);
     
-    // Store the result in Supabase (you can uncomment this when the table is ready)
-    const { supabaseClient } = await import 'https://esm.sh/@supabase/supabase-js@2';
+    // Store the result in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://fnkjxnltxopuljxyoxzx.supabase.co';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
     if (supabaseUrl && supabaseKey) {
-      const supabase = supabaseClient(supabaseUrl, supabaseKey);
+      const supabase = createClient(supabaseUrl, supabaseKey);
       
       // Try to insert the analysis result into the email_threats table
       try {

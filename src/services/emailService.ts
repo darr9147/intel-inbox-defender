@@ -81,21 +81,35 @@ const mockEmailThreats: EmailThreat[] = [
   }
 ];
 
+// Create a reusable function to check if a table exists
+const checkTableExists = async (tableName: string): Promise<boolean> => {
+  try {
+    // Check if the table exists by trying to select from it
+    const { error } = await supabase
+      .from(tableName as any)
+      .select('id')
+      .limit(1)
+      .throwOnError();
+    
+    return !error;
+  } catch (error) {
+    console.log(`Table ${tableName} does not exist:`, error);
+    return false;
+  }
+};
+
 export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
   try {
     // Check if the email_accounts table exists
-    const { error: tableCheckError } = await supabase
-      .from('email_accounts')
-      .select('id')
-      .limit(1);
+    const tableExists = await checkTableExists('email_accounts');
     
-    if (tableCheckError) {
-      console.error('Error checking email_accounts table:', tableCheckError);
+    if (!tableExists) {
+      console.info('Email accounts table not available, returning empty array');
       return [];
     }
 
     const { data, error } = await supabase
-      .from('email_accounts')
+      .from('email_accounts' as any)
       .select('*')
       .order('connected_at', { ascending: false });
 
@@ -117,13 +131,10 @@ export const connectEmailAccount = async (
 ): Promise<EmailAccount | null> => {
   try {
     // Check if the email_accounts table exists
-    const { error: tableCheckError } = await supabase
-      .from('email_accounts')
-      .select('id')
-      .limit(1);
+    const tableExists = await checkTableExists('email_accounts');
     
-    if (tableCheckError) {
-      console.error('Email accounts table not available:', tableCheckError);
+    if (!tableExists) {
+      console.info('Email accounts table not available, returning mock data');
       // Return mock data since table doesn't exist
       return {
         id: crypto.randomUUID(),
@@ -134,7 +145,7 @@ export const connectEmailAccount = async (
     }
 
     const { data, error } = await supabase
-      .from('email_accounts')
+      .from('email_accounts' as any)
       .insert([
         {
           provider,
@@ -161,18 +172,15 @@ export const connectEmailAccount = async (
 export const disconnectEmailAccount = async (id: string): Promise<boolean> => {
   try {
     // Check if the email_accounts table exists
-    const { error: tableCheckError } = await supabase
-      .from('email_accounts')
-      .select('id')
-      .limit(1);
+    const tableExists = await checkTableExists('email_accounts');
     
-    if (tableCheckError) {
-      console.error('Email accounts table not available:', tableCheckError);
+    if (!tableExists) {
+      console.info('Email accounts table not available, pretending to disconnect');
       return true; // Pretend it worked since we're using mock data
     }
 
     const { error } = await supabase
-      .from('email_accounts')
+      .from('email_accounts' as any)
       .delete()
       .eq('id', id);
 
@@ -221,13 +229,10 @@ export const fetchEmailThreats = async (
 ): Promise<EmailThreat[]> => {
   try {
     // Check if the email_threats table exists
-    const { error: tableCheckError } = await supabase
-      .from('email_threats')
-      .select('id')
-      .limit(1);
+    const tableExists = await checkTableExists('email_threats');
     
-    if (tableCheckError) {
-      console.error('Email threats table not available:', tableCheckError);
+    if (!tableExists) {
+      console.info('Email threats table not available, using mock data');
       // Use mock data since table doesn't exist
       let filteredThreats = [...mockEmailThreats];
       
@@ -260,7 +265,7 @@ export const fetchEmailThreats = async (
     
     // If we get here, the table exists, so get data from Supabase
     let query = supabase
-      .from('email_threats')
+      .from('email_threats' as any)
       .select('*');
     
     if (filters) {
@@ -287,7 +292,7 @@ export const fetchEmailThreats = async (
     }
     
     // Convert the database results to match our interface
-    return data.map(item => ({
+    return data.map((item: any) => ({
       id: item.id,
       date: item.date,
       subject: item.subject,
