@@ -151,9 +151,9 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState<number | null>(null);
   
   // Filter states
-  const [threatFilter, setThreatFilter] = useState<string>('');
-  const [severityFilter, setSeverityFilter] = useState<string>('');
-  const [dateFilter, setDateFilter] = useState<string>('');
+  const [threatFilter, setThreatFilter] = useState<string>("all_threats");
+  const [severityFilter, setSeverityFilter] = useState<string>("all_severities");
+  const [dateFilter, setDateFilter] = useState<string>("all_time");
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleExport = (format: string) => {
@@ -223,7 +223,7 @@ const Reports = () => {
                     <SelectValue placeholder="All threats" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                    <SelectItem value="">All threats</SelectItem>
+                    <SelectItem value="all_threats">All threats</SelectItem>
                     <SelectItem value="phishing">Phishing</SelectItem>
                     <SelectItem value="malware">Malware</SelectItem>
                     <SelectItem value="spam">Spam</SelectItem>
@@ -239,7 +239,7 @@ const Reports = () => {
                     <SelectValue placeholder="All severities" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                    <SelectItem value="">All severities</SelectItem>
+                    <SelectItem value="all_severities">All severities</SelectItem>
                     <SelectItem value="critical">Critical</SelectItem>
                     <SelectItem value="high">High</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
@@ -254,7 +254,7 @@ const Reports = () => {
                     <SelectValue placeholder="All time" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                    <SelectItem value="">All time</SelectItem>
+                    <SelectItem value="all_time">All time</SelectItem>
                     <SelectItem value="today">Today</SelectItem>
                     <SelectItem value="week">Last 7 days</SelectItem>
                     <SelectItem value="month">Last 30 days</SelectItem>

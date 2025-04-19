@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 // Define metadata interface to better handle custom user data
 interface UserMetadata {
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome back!",
       });
       
+      navigate('/dashboard');
       return true;
     } catch (error: any) {
       toast({
@@ -100,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome to Email Sentinel Vision!",
       });
       
+      navigate('/dashboard');
       return true;
     } catch (error: any) {
       toast({
@@ -116,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
+      navigate('/');
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
