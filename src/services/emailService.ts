@@ -118,8 +118,8 @@ export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
       return [];
     }
 
-    // Explicitly cast the data to the EmailAccount type
-    return (data || []) as EmailAccount[];
+    // Use a double cast through unknown first to satisfy TypeScript
+    return (data as unknown as EmailAccount[]) || [];
   } catch (error) {
     console.error('Error in fetchEmailAccounts:', error);
     return [];
@@ -163,8 +163,8 @@ export const connectEmailAccount = async (
     // Analyze the email using IPQualityScore API
     await analyzeNewEmail(email);
     
-    // Explicitly cast the data to the EmailAccount type
-    return data as EmailAccount;
+    // Use a double cast through unknown first to satisfy TypeScript
+    return (data as unknown as EmailAccount);
   } catch (error) {
     console.error('Error connecting email account:', error);
     return null;
